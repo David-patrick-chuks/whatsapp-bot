@@ -57,6 +57,10 @@ mongoose.connection.once("open", () => {
 app.get('/', (req, res) => {
   res.send('WhatsApp Bot is live!');
 });
+// Express routes
+app.get('/health', (req, res) => {
+  res.send('WhatsApp Bot is live!');
+});
 
 // Start the server
 app.listen(port, () => {
