@@ -78,6 +78,7 @@ app.get("/", (req, res) => {
 
 // Route to serve the QR code dynamically
 app.get("/qr-live", (req, res) => {
+    console.log("QR code request received.");
   if (globalQRCode) {
     res.type("text/html");
     qrcode.toString(globalQRCode, { type: "svg" }, (err, qrSvg) => {
@@ -94,15 +95,17 @@ app.get("/qr-live", (req, res) => {
 
 // Health check route
 app.get("/health", (req, res) => {
+  console.log("Health check route accessed");
   res.send("WhatsApp Bot is live and healthy!");
 });
 
 // Status route
 app.get("/status", (req, res) => {
+    console.log("Status route accessed");
   if (client) {
-    res.json({ status: client.info ? "ready" : "not ready" });
+    res.send({ status: client.info ? "ready" : "not ready" });
   } else {
-    res.json({ status: "client not initialized" });
+    res.send({ status: "client not initialized" });
   }
 });
 
