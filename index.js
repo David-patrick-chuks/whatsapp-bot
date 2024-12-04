@@ -4,9 +4,29 @@ const { Client, RemoteAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const mongoose = require("mongoose");
 const { MongoStore } = require("wwebjs-mongo");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Function to clear .wwebjs files and folders
+const clearWWebjsCache = () => {
+  const cacheDir = path.join(__dirname, "..wwebjs_auth");
+  const wwebjsDir = path.join(__dirname, ".wwebjs_cache");
+
+  // Delete cache/wwebjs folder
+  if (fs.existsSync(cacheDir)) {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log("Cleared cache/wwebjs folder.");
+  }
+
+  // Delete .wwebjs folder
+  if (fs.existsSync(wwebjsDir)) {
+    fs.rmSync(wwebjsDir, { recursive: true, force: true });
+    console.log("Cleared .wwebjs folder.");
+  }
+};
 
 // MongoDB connection
 mongoose
@@ -25,6 +45,8 @@ let globalQRCode = null; // Store QR code globally for dynamic serving
 
 mongoose.connection.once("open", () => {
   console.log("MongoDB connection is open. Initializing WhatsApp client...");
+  clearWWebjsCache(); // Call this function before initializing the client
+
   const store = new MongoStore({ mongoose });
   console.log("MongoStore initialized.");
 
@@ -37,6 +59,7 @@ mongoose.connection.once("open", () => {
 
   client.on("qr", (qr) => {
     console.log("QR code received. Use the /qr-live endpoint to scan.");
+    qrcode.generate(qr, { small: true }); // Displays QR code in terminal
     globalQRCode = qr; // Save QR code globally
   });
 
@@ -61,9 +84,11 @@ mongoose.connection.once("open", () => {
   });
 
   client.on("message", (message) => {
-    console.log("Received message:", message.body);
+    console.log("Message received with body:", message.body);
+    console.log("From:", message.from, "To:", message.to);
     if (message.body === "!hello") {
-      message.reply("Hello!, My Name is David Patrickkkk");
+      message.reply("Hello!");
+      console.log("Replied with 'Hello!'");
     }
   });
 
@@ -78,7 +103,7 @@ app.get("/", (req, res) => {
 
 // Route to serve the QR code dynamically
 app.get("/qr-live", (req, res) => {
-    console.log("QR code request received.");
+  console.log("QR code request received.");
   if (globalQRCode) {
     res.type("text/html");
     qrcode.toString(globalQRCode, { type: "svg" }, (err, qrSvg) => {
@@ -101,7 +126,7 @@ app.get("/health", (req, res) => {
 
 // Status route
 app.get("/status", (req, res) => {
-    console.log("Status route accessed");
+  console.log("Status route accessed");
   if (client) {
     res.send({ status: client.info ? "ready" : "not ready" });
   } else {
