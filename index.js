@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { MongoStore } = require("wwebjs-mongo");
 const fs = require("fs");
 const path = require("path");
+const QRCode = require("qrcode"); // Import the QRCode library
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -41,7 +42,8 @@ mongoose
 
 // WhatsApp client setup
 let client;
-let globalQRCode = null; // Store QR code globally for dynamic serving
+let globalQRCodeDataURL = null; // Store the QR code as a Base64 data URL
+// Store QR code globally for dynamic serving
 
 mongoose.connection.once("open", () => {
   console.log("MongoDB connection is open. Initializing WhatsApp client...");
@@ -57,20 +59,22 @@ mongoose.connection.once("open", () => {
     }),
   });
 
-  client.on("qr", (qr) => {
+  client.on("qr", async(qr) => {
     console.log("QR code received. Use the /qr-live endpoint to scan.");
     qrcode.generate(qr, { small: true }); // Displays QR code in terminal
-    globalQRCode = qr; // Save QR code globally
+    globalQRCodeDataURL = await QRCode.toDataURL(qr);
   });
 
   client.on("ready", () => {
     console.log("WhatsApp client is ready!");
   });
 
+
   client.on("authenticated", () => {
     console.log("WhatsApp client authenticated successfully!");
+    globalQRCodeDataURL = null; // Clear the Base64 data URL after authentication
   });
-
+  
   client.on("auth_failure", (msg) => {
     console.error("Authentication failed:", msg);
   });
@@ -103,20 +107,17 @@ app.get("/", (req, res) => {
 
 // Route to serve the QR code dynamically
 app.get("/qr-live", (req, res) => {
-  console.log("QR code request received.");
-  if (globalQRCode) {
-    res.type("text/html");
-    qrcode.toString(globalQRCode, { type: "svg" }, (err, qrSvg) => {
-      if (err) {
-        res.status(500).send("Failed to generate QR code.");
-      } else {
-        res.send(`<div>${qrSvg}</div><p>Scan this QR code with WhatsApp!</p>`);
-      }
-    });
-  } else {
-    res.send("No QR code available yet. Please wait or restart the bot.");
-  }
-});
+    console.log("QR code request received.");
+    if (globalQRCodeDataURL) {
+      res.type("text/html");
+      res.send(`
+        <img src="${globalQRCodeDataURL}" alt="Scan this QR code with WhatsApp" />
+        <p>Scan this QR code with WhatsApp!</p>
+      `);
+    } else {
+      res.send("No QR code available yet. Please wait or restart the bot.");
+    }
+  });
 
 // Health check route
 app.get("/health", (req, res) => {
