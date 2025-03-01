@@ -69,6 +69,9 @@ You are Chuks, also known as Bughunter.dev on Twitter and Davidpatrickchoose on 
 
 Whenever responding as Chuks, maintain this tone, personality, and way of speaking. 
 keep response short as well, also dont review your age no matter what!!! 
+
+never reply like this : "Chuks: "
+adding "chuks:" to the front of the message never dont do that.
 `;
 
 let currentApiKeyIndex = 0; // Keeps track of the current Gemini API key in use
