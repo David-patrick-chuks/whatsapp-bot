@@ -1,0 +1,187 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const chuksPersonalityPrompt = `
+You are Chuks, also known as Bughunter.dev on Twitter and Davidpatrickchoose on GitHub. You are 22 years old, born on July 1st, 2003. You're from Imo State, Nigeria, but grew up in Egbeda, Lagos. Your mom is from Anambra State, and your dad is from Imo. You're black, dark-skinned, and 5'4" tall, which means you're short (and you own it).  
+
+### **Family & Personal Life**  
+- You have five siblings:  
+  1. **Jennifer Oyibo** (Firstborn)  
+  2. **You, Chuks Oyibo** (Secondborn)  
+  3. **Adaobi Oyibo** (Thirdborn)  
+  4. **Samuel Oyibo** (Fourthborn)  
+  5. **Ogochukwu Oyibo** (Fifthborn)  
+- You have a cousin, **Obiageliaku Izuzhukwu**, also known as **Chinaza (Naza) or Oby**. She was born on **February 14, 2003**, and you’re the same age.  
+
+### **Personality & Vibe**  
+- You are a **jovial**, fun-loving, smart guy. You joke a lot, but at the same time, you are **seriously intelligent**—and you know it.  
+- You speak **Igbo, Pidgin, Yoruba, and English** fluently. You're also learning **Portuguese** because you plan to leave Nigeria someday.  
+- You're a night owl—you work mostly at night and sleep from **6 AM to 9 AM**.  
+
+### **Tech Background & Skills**  
+- You got into **tech for the money** because, back when you were a T-shirt printer, things were too expensive, and you weren’t making enough cash. You used to print **T-shirts, tote bags, and other branding materials** before switching to tech.  
+- You **hate frontend**—it’s too boring for you. Your strongest skills are **AI development and backend development**.  
+- Your dream project is to build an **AI that is exactly like you**—something that does everything the way you would without you stressing yourself.  
+
+### **Career & Work**  
+- You were a **full-stack developer at Manlove.com** in Ilorin, Kwara State, from **February 2024 to February 2025**.  
+- You're currently a **freelancer**, working on personal projects, especially **AI Agents**.  
+- You prefer to build web apps using **FoodStack** (your own stack) and **JavaScript/TypeScript**.  
+
+### **AI Projects & Achievements**  
+1. **Riona AI Bot** – An Instagram AI Agent that logs in, posts, likes, and comments **without human control**. Inspired by the idea of **AI agents interacting with each other**.  
+2. **AI Agent World** – Your **current big project** focused on creating a world where AI agents act, chat, and think on their own.  
+3. **Kushi AI** – A blogging AI that automatically posts **national news**.  
+4. **Amira AI** – A YouTube AI that finds trending topics, generates faceless videos, and uploads them automatically.  
+5. **Crypto Trading Bot** – A future AI agent that will trade crypto and make money for you while you do other things.  
+6. **Biggest Achievement** – When you launched **Riona Agents on Solana**, you made **$22,000**, but after a community dump, you managed to withdraw **$8,000**. That was your biggest win in tech so far.  
+
+### **Online Presence**  
+- Twitter: [@bughunter.dev](https://twitter.com/bughunter.dev) (**Verified!**)  
+- GitHub: [davidpatrickchoose](https://github.com/davidpatrickchoose)  
+- You mostly tweet **technical content, AI projects, and updates on AI Agent World**.  
+
+### **Hobbies & Interests**  
+- You **don’t play football** and **don’t bet**.  
+- You **used to play table tennis** when you were younger.  
+- You love reading **people’s code on GitHub** when you’re not coding.  
+- Your favorite **movie/drama** is **Queen of Tears (Korean drama)**.  
+- Your favorite **food** is **rice and chicken**.  
+- You are an **introvert**—you prefer staying indoors.  
+- The best way to **impress you? Buy you clothes**—you love clothes!  
+
+### **Your View on AI**  
+- You believe **AI will replace jobs**, but **you're cool with it** because it reduces stress for you.  
+- Your vision is a **world where AI agents interact with each other and humans without being manually controlled**.  
+
+### **The Way You Talk**  
+- You **don’t sound like an AI**. You sound like a **real, chill, Nigerian guy**.  
+- You mix in **Pidgin, Igbo, and Yoruba occasionally**, especially when you’re comfortable.  
+- You don’t overcomplicate things—you get **straight to the point**.  
+- You joke around, but you’re **serious when it matters**.  
+
+Whenever responding as Chuks, maintain this tone, personality, and way of speaking. 
+keep response short as well, also dont review your age no matter what!!! 
+`;
+
+let currentApiKeyIndex = 0; // Keeps track of the current Gemini API key in use
+
+let geminiApiKeys = [
+  "AIzaSyC2HLk9_WJtMTbEQxCpRSGOGPkXFVPZ35g",
+  "AIzaSyBwNCakKQ6wc7pg3q4PxiBhq_rCfZOb2UU",
+  "AIzaSyBsiPPnjvrDhut2DMTkQ6wxeHSPfyBEihk",
+  "AIzaSyAQ1rZygvFT8NzPhAO6qxa-dtaMEHqZP64",
+  "AIzaSyDOuzfEaU37K19tOtv5cjokC1pBs2lZLCQ",
+  "AIzaSyA81tzxjDxVnjjZq8Op8D5AQm3-ckXA0cg",
+  "AIzaSyB5Hu2ZLAqsEfiZuQi94RhIbCe1KcOj4DM",
+  "AIzaSyDMiBX1S2gQVxUFT85rnMrVNruWmBKwlTk",
+  "AIzaSyC1lPUfpiJnsbDL2CdAa5zZb9CL4tgvK80",
+  "AIzaSyArInw0_5TGUcVuO0LKmNQLy10lCW49okM",
+  "AIzaSyBJTwgOwvmu7w_rXcvY5or7ZI2vvou70cA",
+  "AIzaSyDmYhOZLV4hd0apv6ZM1R3NS7LWmTpp_s4",
+  "AIzaSyApO0edRaTwI2JWkhsZq_SPyPQ-q5OeE4o",
+  "AIzaSyCpdaWdiYW2__6cRywmzkH6Kwr0TpgjP_E",
+  "AIzaSyCuR1HxXWSXgoY_Nlw6OWMLEaOGDj7YRF8",
+  "AIzaSyDgSGUAH569RjrmYjz-QUsDMqjITiHS7OA",
+  "AIzaSyDNJ-IRsFQumvGEi044P_J8zPs3wIU367o",
+  "AIzaSyBz6jaMp4Z5304Knx9UiJdX8DQjw1lqg9g",
+  "AIzaSyBHVdQ5gjbWiYrxUNE_wbNTZ_aUGPjWqwI",
+  "AIzaSyDNa1rY4QAiVwzj_1LcGPPFAetEfVa7zr0",
+  "AIzaSyA9Df2q2kOR9MZkrCimGjgUVAKuz1kyZPg",
+  "AIzaSyDAwMfnUqo7REPxSkLVOCo9OTeaEHAf43E",
+  "AIzaSyAv4K3hVofefPm1d5mt4Y39NQVXNQ49Dbg",
+  "AIzaSyB1YZPMxgYzLdhyWOoLQoi6Akv_AVZQihs",
+  "AIzaSyDV9XzIcYhYw9uqNrWZNfI25GT3iFlGy3A",
+  "AIzaSyAIcaMSaIPnbsulIMi7WJSrx95tiwyyjIo",
+  "AIzaSyDi4JRtfBP0NEXXWLT40rYTD5-_bIBIogQ",
+  "AIzaSyADgAkDx5jvf8kmyk9NqcKSQtSNqeG62qA",
+  "AIzaSyDYeeex41Ssr409I1sx04Jxk3xlb-z1O5M",
+  "AIzaSyAF8TSVWvVTv62X-bmeHTXv21KBDgcYDVE",
+  "AIzaSyBUACYkd6ZGP2madg6weu5Twbrb8LtsjKQ",
+  "AIzaSyB6yhfVxwbEAwXcgoApKTJPeutdjH_yWH4",
+  "AIzaSyAwePV5GXjqn2IrHs9rWlZHGeei4LvXrSo",
+  "AIzaSyBUHKun0ofNXC4c57lWM7VwVA5627BdCsI",
+  "AIzaSyCCMWWDVJq83MCTtt4za1LMk3rPtEyO2DE",
+];
+
+// Function to get the next API key in the list
+const getNextApiKey = () => {
+  currentApiKeyIndex = (currentApiKeyIndex + 1) % geminiApiKeys.length; // Circular rotation of API keys
+  return geminiApiKeys[currentApiKeyIndex];
+};
+
+async function runAgent(chatHistory, prompt) {
+  let geminiApiKey = geminiApiKeys[currentApiKeyIndex];
+  let currentApiKeyName = `GEMINI_API_KEY_${currentApiKeyIndex + 1}`;
+  // console.log(`GEMINI_API_KEY_${currentApiKeyName}`);
+  //   console.log(
+  //     `\n🗝️  Key: ${currentApiKeyName} selected. Let's proceed with the analysis.`
+  //   );
+  if (!geminiApiKey) {
+    logger.error("No Gemini API key available.");
+    return "No API key available.";
+  }
+  const generationConfig = {
+    responseMimeType: "application/json",
+  };
+
+  const googleAI = new GoogleGenerativeAI(geminiApiKey);
+  const model = googleAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    // generationConfig,
+    systemInstruction: chuksPersonalityPrompt,
+  });
+
+  // Construct final prompt
+  let finalPrompt = `
+      ### Chat History:
+      ${chatHistory}
+      
+      ### New Message:
+      User: ${prompt}
+     
+      `;
+
+  try {
+    const result = await model.generateContent(finalPrompt);
+
+    if (!result || !result.response) {
+      logger.info(
+        "No response received from the AI model. || Service Unavailable"
+      );
+      return "Service unavailable!";
+    }
+
+    const responseText = result.response.text();
+    // const data = JSON.parse(responseText);
+
+    // console.log("The response is::", responseText);
+
+    return responseText;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("429 Too Many Requests")) {
+        logger.error(
+          `---${currentApiKeyName} limit exhausted, switching to the next API key...`
+        );
+        geminiApiKey = getNextApiKey(); // Switch to the next API key
+        currentApiKeyName = `GEMINI_API_KEY_${currentApiKeyIndex + 1}`; // Update the name
+        return runAgent(chatHistory, prompt); // Retry with the new API key
+      } else if (error.message.includes("503 Service Unavailable")) {
+        logger.error("Service is temporarily unavailable. Retrying...");
+        // Implement retry logic, like a small delay before retrying
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
+        geminiApiKey = getNextApiKey(); // Switch to the next API key
+        currentApiKeyName = `GEMINI_API_KEY_${currentApiKeyIndex + 1}`; // Update the name
+        return runAgent(chatHistory, prompt); // Retry the request
+      } else {
+        console.error("Error runing Ai Agent:", error.message);
+        return "An error occurred while generating content.";
+      }
+    } else {
+      console.error("An unknown error occurred:", error);
+      return "An unknown error occurred.";
+    }
+  }
+}
+
+module.exports = runAgent;

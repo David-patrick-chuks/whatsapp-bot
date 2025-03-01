@@ -11,7 +11,4 @@ jobs:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner
     steps:
       - name: Request Render - First Backend
-        run: curl -X GET https://server.crons.punchbbowlinvite.help  # Request to the first backend server
-
-      - name: Request Render - Second Backend
-        run: curl -X GET https://bughuntermanagment-server.onrender.com  # Request to the second backend server
+        run: curl -X GET https://server.whatsapp.help  # Request to the first backend server
