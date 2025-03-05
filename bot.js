@@ -10,6 +10,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // List of recipients
+
 const recipients = [
   
     "Hunttactical@gmail.com",
