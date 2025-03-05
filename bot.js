@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 // List of recipients
 const recipients = [
-    "support@hatnboot.com",
+  
     "Hunttactical@gmail.com",
     "contact@shopviralonline.com",
     "shoprovelo@gmail.com",
